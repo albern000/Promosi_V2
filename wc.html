@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rekrutmen Disetujui — AOT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:   #14160f;
+    --bg-panel-2:#23271b;
+    --line:      #3a3f2c;
+    --olive:     #7c8f52;
+    --olive-dim: #5b6a3c;
+    --brass:     #c9a15a;
+    --brass-lt:  #e3c384;
+    --stamp-red: #b5482f;
+    --bone:      #e9e6d8;
+    --muted:     #9aa085;
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *,*::before,*::after{ box-sizing:inherit; }
+  html,body{ height:100%; margin:0; }
+  body{
+    background: var(--bg-deep); color: var(--bone);
+    font-family:'Barlow','Segoe UI',sans-serif;
+    overflow:hidden; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cine{ position:fixed; inset:0; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+
+  .terrain{
+    position:absolute; inset:0; z-index:-2;
+    background-color: var(--bg-deep);
+    background-image:
+      linear-gradient(rgba(124,143,82,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,143,82,0.05) 1px, transparent 1px),
+      radial-gradient(ellipse 560px 400px at 50% 45%, rgba(201,161,90,0.10), transparent 60%);
+    background-size: 42px 42px, 42px 42px, auto;
+  }
+  .sweep{
+    position:absolute; z-index:-1; top:50%; left:50%; width:900px; height:900px;
+    transform: translate(-50%,-50%); border-radius:50%;
+    background: conic-gradient(from 0deg, rgba(201,161,90,0.10), transparent 20%);
+    animation: spin 9s linear infinite;
+  }
+  @keyframes spin{ to{ transform: translate(-50%,-50%) rotate(360deg); } }
+  .vignette{
+    position:absolute; inset:0; pointer-events:none; z-index:5;
+    background: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+  }
+  .scanlines{
+    position:absolute; inset:0; pointer-events:none; opacity:0.25; z-index:5;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 2px, transparent 3px);
+    mix-blend-mode:multiply;
+  }
+
+  .scene{ display:flex; flex-direction:column; align-items:center; z-index:2; }
+  .card-stage{ position:relative; width:min(86vw, 320px); }
+
+  .card{
+    position:relative; width:100%; background: linear-gradient(165deg, rgba(35,39,27,0.95), rgba(20,22,15,0.96));
+    border:1px solid var(--line); padding:16px 16px 14px; transform: rotate(-2.5deg) translateY(24px); opacity:0;
+    animation: cardRise 0.55s cubic-bezier(.2,.9,.3,1) forwards; animation-delay:0.1s;
+  }
+  @keyframes cardRise{ to{ opacity:1; transform: rotate(-2.5deg) translateY(0); } }
+  .card::before{ content:""; position:absolute; top:-1px; left:-1px; width:16px; height:16px; border-top:2px solid var(--brass); border-left:2px solid var(--brass); }
+  .card::after{ content:""; position:absolute; bottom:-1px; right:-1px; width:16px; height:16px; border-bottom:2px solid var(--brass); border-right:2px solid var(--brass); }
+
+  .card.shake{ animation: cardRise 0.55s cubic-bezier(.2,.9,.3,1) forwards, shake 0.32s ease; animation-delay:0.1s, 0s; }
+  @keyframes shake{
+    0%,100%{ transform: rotate(-2.5deg) translate(0,0); }
+    20%{ transform: rotate(-2.5deg) translate(-3px,1px); }
+    40%{ transform: rotate(-2.5deg) translate(3px,-1px); }
+    60%{ transform: rotate(-2.5deg) translate(-2px,1px); }
+    80%{ transform: rotate(-2.5deg) translate(2px,0); }
+  }
+
+  .card-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:1px dashed var(--line); padding-bottom:8px; margin-bottom:10px;
+  }
+  .card-head .tag{ font-size:10px; letter-spacing:0.18em; color:var(--brass); text-transform:uppercase; font-weight:600; }
+  .card-head .serial{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--muted); }
+
+  .card-body{ display:flex; gap:12px; }
+  .photo{
+    width:64px; height:76px; flex-shrink:0; background: var(--bg-panel-2); border:1px solid var(--line);
+    display:flex; align-items:flex-end; justify-content:center; overflow:hidden;
+  }
+  .photo svg{ width:46px; height:46px; opacity:0.5; }
+
+  .fields{ flex:1; display:flex; flex-direction:column; gap:6px; justify-content:center; }
+  .field{ font-size:11.5px; }
+  .field .k{ color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; font-size:9.5px; display:block; }
+  .field .v{ color:var(--bone); font-weight:600; letter-spacing:0.02em; }
+  .field .v.status{ color:var(--muted); }
+  .field .v.status.active{ color:var(--brass); }
+
+  .card-foot{
+    margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .barcode{ display:flex; gap:2px; align-items:flex-end; height:18px; }
+  .barcode span{ width:2px; background:var(--olive-dim); }
+  .card-foot .unit{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--muted); }
+
+  .stamp{
+    position:absolute; top:38%; left:55%; width:128px; height:128px;
+    transform: translate(-50%,-50%) scale(2.4) rotate(-32deg); opacity:0;
+    animation: stampSlam 0.42s cubic-bezier(.55,0,1,1) forwards; animation-delay:0.62s;
+    z-index:3; pointer-events:none;
+  }
+  @keyframes stampSlam{
+    0%{ transform: translate(-50%,-50%) scale(2.4) rotate(-32deg); opacity:0; }
+    75%{ opacity:1; }
+    100%{ transform: translate(-50%,-50%) scale(1) rotate(-13deg); opacity:0.92; }
+  }
+  .stamp .ring{ position:absolute; inset:0; border-radius:50%; border:3px double var(--stamp-red); }
+  .stamp .txt{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Big Shoulders Display', sans-serif; font-weight:800; font-size:19px; letter-spacing:0.06em;
+    color: var(--stamp-red); text-transform:uppercase; line-height:1;
+  }
+
+  .impact{
+    position:absolute; top:38%; left:55%; width:20px; height:20px; border-radius:50%;
+    transform:translate(-50%,-50%) scale(0.3); border:1px solid var(--brass); opacity:0;
+    animation: impactRing 0.5s ease-out forwards; animation-delay:0.92s;
+  }
+  @keyframes impactRing{ 0%{ opacity:0.9; transform:translate(-50%,-50%) scale(0.3);} 100%{ opacity:0; transform:translate(-50%,-50%) scale(7);} }
+
+  .confetti{ position:absolute; top:-6%; width:7px; height:14px; opacity:0; animation: fall 2.4s ease-in forwards; z-index:2; }
+  @keyframes fall{
+    0%{ opacity:0; transform: translateY(0) rotate(0deg); }
+    8%{ opacity:1; }
+    100%{ opacity:0; transform: translateY(110vh) rotate(520deg); }
+  }
+  .c1{ left:16%; background:var(--brass);    animation-delay:0.95s; }
+  .c2{ left:26%; background:var(--olive);    animation-delay:1.05s; }
+  .c3{ left:36%; background:var(--brass-lt); animation-delay:0.90s; }
+  .c4{ left:64%; background:var(--olive-dim);animation-delay:1.10s; }
+  .c5{ left:74%; background:var(--brass);    animation-delay:1.00s; }
+  .c6{ left:84%; background:var(--brass-lt); animation-delay:1.15s; }
+  .c7{ left:44%; background:var(--olive);    animation-delay:1.25s; }
+  .c8{ left:56%; background:var(--brass);    animation-delay:1.30s; }
+
+  .title-card{ margin-top:22px; text-align:center; padding:0 24px; z-index:4; }
+  .eyebrow, h1, p.sub, .bar-wrap{ opacity:0; transform: translateY(10px) scale(0.98); }
+  .eyebrow{
+    font-size:11px; letter-spacing:0.22em; color:var(--brass); text-transform:uppercase; font-weight:600;
+    animation: cardIn 0.5s cubic-bezier(.2,1.2,.4,1) forwards; animation-delay:1.15s;
+  }
+  h1{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:800;
+    font-size: clamp(1.6rem, 7.5vw, 2.15rem); text-transform:uppercase; margin:8px 0 6px; letter-spacing:0.02em;
+    animation: cardIn 0.55s cubic-bezier(.2,1.3,.35,1) forwards; animation-delay:1.3s;
+  }
+  p.sub{
+    color:var(--muted); font-size:14px; margin:0 auto 18px; max-width:320px;
+    animation: cardIn 0.5s cubic-bezier(.2,1.2,.4,1) forwards; animation-delay:1.5s;
+  }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0) scale(1); } }
+
+  .bar-wrap{ max-width:260px; margin:0 auto; animation: cardIn 0.4s ease forwards; animation-delay:1.65s; }
+  .bar{ height:3px; background:var(--bg-panel-2); border:1px solid var(--line); overflow:hidden; }
+  .bar .fill{ height:100%; width:0%; background: var(--brass); animation: load 1.4s linear forwards; animation-delay:1.75s; }
+  @keyframes load{ to{ width:100%; } }
+  .readout{
+    margin-top:10px; font-size:10.5px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .bar-top, .bar-bottom{
+    position:absolute; left:0; right:0; height:0; background:#000; z-index:6;
+    animation: closeBars 0.8s ease-out forwards; animation-delay:3.25s;
+  }
+  .bar-top{ top:0; } .bar-bottom{ bottom:0; }
+  @keyframes closeBars{ to{ height:11%; } }
+
+  .blackout{
+    position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; z-index:9;
+    animation: fadeBlack 0.7s ease-in forwards; animation-delay:3.45s;
+  }
+  @keyframes fadeBlack{ to{ opacity:1; } }
+
+  .sound-hint{
+    position:absolute; bottom:6%; left:50%; transform:translateX(-50%);
+    font-size:10.5px; letter-spacing:0.08em; color:var(--muted); text-transform:uppercase;
+    opacity:0; pointer-events:none; transition:opacity .3s ease; z-index:6;
+  }
+  .sound-hint.show{ opacity:0.85; }
+
+  @media (prefers-reduced-motion: reduce){
+    .sweep,.card,.stamp,.impact,.confetti{ animation:none !important; }
+    .card{ opacity:1; transform:rotate(-2.5deg); }
+    .stamp{ opacity:0.92; transform:translate(-50%,-50%) scale(1) rotate(-13deg); }
+    .eyebrow,h1,p.sub,.bar-wrap{ opacity:1; transform:none; animation:none; }
+    .bar .fill{ width:100%; animation:none; }
+    .bar-top,.bar-bottom{ height:11%; animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="cine">
+  <div class="terrain"></div>
+  <div class="sweep"></div>
+
+  <div class="scene">
+    <div class="card-stage">
+      <div class="card" id="card">
+        <div class="card-head">
+          <span class="tag">Kartu Anggota</span>
+          <span class="serial">NO. AOT-0417</span>
+        </div>
+        <div class="card-body">
+          <div class="photo">
+            <svg viewBox="0 0 24 24" fill="var(--muted)"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+          </div>
+          <div class="fields">
+            <div class="field"><span class="k">Nama</span><span class="v">Anggota Baru</span></div>
+            <div class="field"><span class="k">Pangkat</span><span class="v">Rekrut</span></div>
+            <div class="field"><span class="k">Unit</span><span class="v">AOT</span></div>
+            <div class="field"><span class="k">Status</span><span class="v status" id="statusVal">Diproses…</span></div>
+          </div>
+        </div>
+        <div class="card-foot">
+          <div class="barcode">
+            <span style="height:100%"></span><span style="height:55%"></span><span style="height:90%"></span>
+            <span style="height:40%"></span><span style="height:100%"></span><span style="height:65%"></span>
+            <span style="height:85%"></span><span style="height:50%"></span><span style="height:95%"></span>
+          </div>
+          <span class="unit">AOT-SEC-01</span>
+        </div>
+        <div class="stamp">
+          <div class="ring"></div>
+          <div class="txt">Diterima</div>
+        </div>
+        <div class="impact"></div>
+      </div>
+    </div>
+
+    <div class="confetti c1"></div><div class="confetti c2"></div><div class="confetti c3"></div>
+    <div class="confetti c4"></div><div class="confetti c5"></div><div class="confetti c6"></div>
+    <div class="confetti c7"></div><div class="confetti c8"></div>
+
+    <div class="title-card">
+      <div class="eyebrow">Rekrutmen Disetujui</div>
+      <h1>Selamat Bergabung!</h1>
+      <p class="sub">Kamu resmi menjadi bagian dari Unit AOT. Menyiapkan akses anggota.</p>
+      <div class="bar-wrap">
+        <div class="bar"><div class="fill"></div></div>
+        <div class="readout">Memuat markas <span id="pct">0%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sound-hint" id="soundHint">Ketuk layar untuk suara</div>
+
+  <div class="bar-top"></div>
+  <div class="bar-bottom"></div>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div class="blackout"></div>
+</div>
+
+<script>
+  var card = document.getElementById('card');
+  var statusVal = document.getElementById('statusVal');
+  var pct = document.getElementById('pct');
+  var soundHint = document.getElementById('soundHint');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var TUJUAN = 'https://chat.whatsapp.com/DR883wS3LiU08WQvvR5WXn'; // GANTI dengan halaman tujuan sebenarnya
+  var totalDelay = reduced ? 800 : 4150;
+
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = AudioCtx ? new AudioCtx() : null;
+
+  function tone(freq, startAt, dur, type, peak){
+    if(!actx) return;
+    var osc = actx.createOscillator();
+    var gain = actx.createGain();
+    osc.type = type || 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, actx.currentTime + startAt);
+    gain.gain.linearRampToValueAtTime(peak || 0.18, actx.currentTime + startAt + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + startAt + dur);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(actx.currentTime + startAt);
+    osc.stop(actx.currentTime + startAt + dur + 0.05);
+  }
+
+  function stampThud(startAt){
+    if(!actx) return;
+    var osc = actx.createOscillator();
+    var gain = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(160, actx.currentTime + startAt);
+    osc.frequency.exponentialRampToValueAtTime(48, actx.currentTime + startAt + 0.18);
+    gain.gain.setValueAtTime(0.001, actx.currentTime + startAt);
+    gain.gain.linearRampToValueAtTime(0.45, actx.currentTime + startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + startAt + 0.22);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(actx.currentTime + startAt);
+    osc.stop(actx.currentTime + startAt + 0.25);
+
+    var bufSize = actx.sampleRate * 0.08;
+    var buffer = actx.createBuffer(1, bufSize, actx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for(var i = 0; i < bufSize; i++){ data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize); }
+    var noise = actx.createBufferSource();
+    noise.buffer = buffer;
+    var noiseFilter = actx.createBiquadFilter();
+    noiseFilter.type = 'lowpass'; noiseFilter.frequency.value = 1200;
+    var noiseGain = actx.createGain();
+    noiseGain.gain.setValueAtTime(0.35, actx.currentTime + startAt);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + startAt + 0.09);
+    noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(actx.destination);
+    noise.start(actx.currentTime + startAt);
+  }
+
+  function playFanfare(startAt){
+    tone(659.25, startAt + 0.00, 0.26, 'triangle', 0.15);
+    tone(783.99, startAt + 0.09, 0.30, 'triangle', 0.16);
+    tone(1046.5, startAt + 0.18, 0.55, 'sine',     0.15);
+    tone(392.00, startAt + 0.18, 0.60, 'sine',     0.06);
+  }
+
+  var soundReady = false;
+  function armSound(){
+    if(soundReady || !actx) return;
+    if(actx.state === 'suspended'){ actx.resume().catch(function(){}); }
+    if(actx.state === 'running'){
+      soundReady = true;
+      stampThud(0);
+      playFanfare(0.28);
+      soundHint.classList.remove('show');
+    }
+  }
+
+  setTimeout(function(){
+    armSound();
+    setTimeout(function(){ if(!soundReady) soundHint.classList.add('show'); }, 200);
+  }, reduced ? 0 : 620);
+
+  ['pointerdown','touchstart','click','keydown'].forEach(function(evt){
+    document.addEventListener(evt, armSound, { once:false, passive:true });
+  });
+
+  setTimeout(function(){
+    card.classList.add('shake');
+    statusVal.textContent = 'Aktif';
+    statusVal.classList.add('active');
+  }, reduced ? 0 : 920);
+
+  var barDelay = reduced ? 0 : 1750, barDuration = reduced ? 400 : 1400;
+  var start = null;
+  function tick(ts){
+    if(!start) start = ts;
+    var elapsed = ts - start;
+    var p = Math.min(100, Math.max(0, Math.round(((elapsed - barDelay) / barDuration) * 100)));
+    pct.textContent = p + '%';
+    if(elapsed < barDelay + barDuration){ requestAnimationFrame(tick); }
+  }
+  requestAnimationFrame(tick);
+
+  window.addEventListener('load', function(){
+    setTimeout(function(){ window.location.href = TUJUAN; }, totalDelay);
+  });
+</script>
+</body>
+</html>
